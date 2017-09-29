@@ -1,6 +1,26 @@
 runtime: go
-api_version: go1
+api_version: go1.8
 
 handlers:
-- url: /.*
+
+- url: /push
   script: _go_app
+
+- url: /temp
+  script: _go_app
+
+- url: /data
+  script: _go_app
+
+- url: /favicon.ico
+  static_files: static/favicon.ico
+  upload: static/favicon.ico
+
+
+- url: /
+  static_files: static/index.html
+  upload: static/index.html
+
+- url: /(.*\.(gif|png|jpg|html))$
+  static_files: static/\1
+  upload: static/.*\.(gif|png|jpg|html)$
