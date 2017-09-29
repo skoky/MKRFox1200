@@ -11,6 +11,7 @@ import (
     "context"
     "google.golang.org/appengine/datastore"
     "encoding/json"
+    "strconv"
 )
 
 var local *time.Location
@@ -25,11 +26,11 @@ func init() {
 // [GET] https://kachnicka-170919.appspot.com/push?x={data}&Time={Time}&Snr={Snr}&Station={Station}&Lat={Lat}&Lng={Lng}&Device={Device}
 
 type Metadata struct {
-    Time    string
+    Time    int32
     Snr     string
     Station string
-    Lat     string
-    Lng     string
+    Lat     float32
+    Lng     float32
     Device  string
 }
 
@@ -38,15 +39,16 @@ func handlerData(w http.ResponseWriter, r *http.Request) {
     q := datastore.NewQuery("Metadata")
 
     var meta []Metadata
-    keys, err := q.GetAll(ctx, &meta);
-    if err != nil {
+    keys, err := q.GetAll(ctx, &meta); if err != nil {
         fmt.Fprintf(w, "Datastore error: %v", err)
     }
 
-    datastore.Get(ctx, keys[0], &meta)
-    for i, d := range meta {
-        b, _ := json.Marshal(d)
-        fmt.Fprintf(w, "%d -> %s\n", i, b)
+    if len(keys) >0 {
+        datastore.Get(ctx, keys[0], &meta)
+        for i, d := range meta {
+            b, _ := json.Marshal(d)
+            fmt.Fprintf(w, "%d -> %s\n", i, b)
+        }
     }
 }
 
@@ -80,12 +82,23 @@ func handlerPush(w http.ResponseWriter, r *http.Request) {
     tempTime := time.Now().In(local).String()
     setKeyToCache(ctx, "TEMP-TIME", tempTime, r)
 
+    timeMs,err := strconv.ParseInt(r.URL.Query().Get("time"),10,32); if err != nil {
+        log.Errorf(ctx,"Error converting time %s",r.URL.Query().Get("time"))
+    }
+
+    lat,err := strconv.ParseFloat(r.URL.Query().Get("lat"),32); if err != nil {
+        log.Errorf(ctx,"Error converting lat %s",r.URL.Query().Get("lat"))
+    }
+    lng,err := strconv.ParseFloat(r.URL.Query().Get("lng"),32); if err != nil {
+        log.Errorf(ctx,"Error converting lng %s",r.URL.Query().Get("lng"))
+    }
+
     meta := Metadata{
-        Time:    r.URL.Query().Get("time"),
+        Time:    int32(timeMs),
         Snr:     r.URL.Query().Get("snr"),
         Station: r.URL.Query().Get("station"),
-        Lat:     r.URL.Query().Get("lat"),
-        Lng:     r.URL.Query().Get("lng"),
+        Lat:     float32(lat),
+        Lng:     float32(lng),
         Device:  r.URL.Query().Get("device"),
     }
     log.Infof(ctx, "Struct %v", meta)
