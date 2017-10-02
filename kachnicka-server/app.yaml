@@ -12,6 +12,9 @@ handlers:
 - url: /data
   script: _go_app
 
+- url: /meta
+  script: _go_app
+
 - url: /favicon.ico
   static_files: static/favicon.ico
   upload: static/favicon.ico
