@@ -19,6 +19,7 @@ var local *time.Location
 func init() {
     http.HandleFunc("/temp", handler)
     http.HandleFunc("/push", handlerPush)
+    http.HandleFunc("/meta", handlerMetaData)
     http.HandleFunc("/data", handlerData)
     local, _ = time.LoadLocation("Europe/Prague")
 }
@@ -31,11 +32,13 @@ type Metadata struct {
     Station  string
     Device   string
     Position appengine.GeoPoint
+    DataSize int
+    Data     float32
 }
 
 func handlerData(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
-    q := datastore.NewQuery("Metadata")
+    q := datastore.NewQuery("Metadata").Order("-Time")
 
     var meta []Metadata
     keys, err := q.GetAll(ctx, &meta);
@@ -43,12 +46,31 @@ func handlerData(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "Datastore error: %v", err)
     }
 
+    w.Header().Set("Content-Type", "text/plain")
     if len(keys) > 0 {
         datastore.Get(ctx, keys[0], &meta)
         for i, d := range meta {
             b, _ := json.Marshal(d)
-            fmt.Fprintf(w, "\n%d -> %s", i, b)
+            fmt.Fprintf(w, "%d -> %s\n", i, b)
         }
+    }
+}
+
+func handlerMetaData(w http.ResponseWriter, r *http.Request) {
+    ctx := appengine.NewContext(r)
+    q := datastore.NewQuery("Metadata").Order("-Time")
+
+    var meta []Metadata
+    keys, err := q.GetAll(ctx, &meta);
+    if err != nil {
+        fmt.Fprintf(w, "Datastore error: %v", err)
+    }
+
+    w.Header().Set("Content-Type", "text/plain")
+    if len(keys) > 0 {
+        datastore.Get(ctx, keys[0], &meta)
+        b, _ := json.Marshal(meta)
+        fmt.Fprintf(w, "%s", b)
     }
 }
 
@@ -96,6 +118,8 @@ func handlerPush(w http.ResponseWriter, r *http.Request) {
         log.Errorf(ctx, "Error converting lng %s", r.URL.Query().Get("lng"))
     }
 
+    data, err := strconv.ParseFloat(temp, 32)
+    dataSize := len(tempS)
     gp := appengine.GeoPoint{Lat: lat, Lng: lng}
     meta := Metadata{
         Time:     int32(timeMs),
@@ -103,6 +127,8 @@ func handlerPush(w http.ResponseWriter, r *http.Request) {
         Station:  r.URL.Query().Get("station"),
         Device:   r.URL.Query().Get("device"),
         Position: gp,
+        DataSize: dataSize,
+        Data:     float32(data),
     }
     log.Infof(ctx, "Struct %v", meta)
     key := datastore.NewIncompleteKey(ctx, "Metadata", nil)
