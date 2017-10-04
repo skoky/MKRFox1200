@@ -2,6 +2,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
 <body>
+<h1>Data size chart</h1>
+
 <div class="chart-container" style="position: relative; height:40vh; width:80vw">
     <canvas id="myChart"></canvas>
 </div>
@@ -12,14 +14,14 @@
     function getData() {
 //        return [10, 11, 10, 15, 12, 13];
         $.get("/meta", function (r) {
-            console.log("Data -> ", r);
             var j = JSON.parse(r);
             var sizes = $.map(j,function(item,i){
-                return ( item.Data);
+                return ( item.DataSize);
             });
             var times = $.map(j,function(item,i){
                 return ( new Date(item.Time).toISOString());
             });
+            console.log(j);
             createChart(sizes, times);
         });
     }
@@ -31,7 +33,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Temperature (C)',
+                    label: 'Data size (bytes)',
                     data: data,
                     backgroundColor: [],
                     borderColor: [],
