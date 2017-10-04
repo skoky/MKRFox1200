@@ -47,8 +47,8 @@ void loop() {
     Serial.print("Sleeping now minutes: ");
     Serial.println(sleepMins);
   }
-  // LowPower.sleep(sleepMins * 60 * 1000);
-  delay(sleepMins * 60 * 1000);
+  LowPower.sleep(sleepMins * 60 * 1000);
+  // delay(sleepMins * 60 * 1000);
 
   if (DEBUG) {
     Serial.println("Wake up");
@@ -84,10 +84,3 @@ void sendTemp(float temp) {
   }
 
 }
-
-//void reboot() {
-//  NVIC_SystemReset();
-//  while (1);
-//}
-
-
