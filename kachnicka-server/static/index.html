@@ -1,58 +1,101 @@
 <html>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+<head>
+  <title>Kachnicka</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+</head>
 <body>
-<div class="chart-container" style="position: relative; height: 40vh; width: 80vw">
-    <canvas id="myChart" />
-</div>
+  <h1>Graph</h1>
+  <div id="chart-container" style="position: relative; height: 70vh; width: 100%" />
 
-<script>
-    const createChart = (data, labels) => {
-      let ctx = document.getElementById("myChart").getContext('2d')
+  <script>
+    Chart.defaults.global.animation.duration = 0
+
+    const graph = (() => {
+      let canvas = document.createElement("canvas")
+      document.getElementById("chart-container").appendChild(canvas)
+      let ctx = canvas.getContext('2d')
       let chartOptions = {
-        type: 'bar',
+        type: 'line',
         data: {
-          labels: labels,
-          datasets: [{
-            label: 'Temperature (C)',
-            data: data,
-            backgroundColor: [],
-            borderColor: [],
-            borderWidth: 1
-          }]
+          labels: [],
+          datasets: []
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          spanGaps: false,
+          elements: {
+            line: {
+              tension: 0.000001
+            }
+          },
+          plugins: {
+            filler: {
+              propagate: false
+            }
+          },
           scales: {
-            yAxes: [{
+            xAxes: [{
+              display: true,
               ticks: {
-                beginAtZero: true
+                autoSkip: false
               }
+            }],
+            yAxes: [{
+              display: true,
+              beginAtZero: true
             }]
           }
         }
       }
-      let myChart = new Chart(ctx, chartOptions)
+      return new Chart(ctx, chartOptions)
+    })()
+
+    const refreshData = (chart, times, d_sizes, ds_sizes) => {
+      chart.data.labels = times
+      chart.data.datasets = [{
+        label: 'Temperature (C)',
+        data: d_sizes,
+        backgroundColor: transparentize(colors.red),
+        borderColor: colors.red,
+        fill: false
+      },
+      {
+        label: 'Data size (bytes)',
+        data: ds_sizes,
+        backgroundColor: transparentize(colors.blue),
+        borderColor: colors.blue,
+        fill: false
+      }]
+      chart.update()
     }
 
-    const getData = () => fetch('/meta')
+    const refresh = () => {
+      fetch('/meta')
       .then(response => response.json())
       .then(data => {
-        console.log("Data -> ", data)
+        let slice = data.slice(0, 50).reverse()
+        let d_sizes = slice.map(item => item.Data)
+        let ds_sizes = slice.map(item => item.DataSize)
+        let times = slice.map(item => new Date(item.Time * 1000).toUTCString())
 
-        // FIXME if dict
-        //let newObj = Object.assign(...Object.entries(obj).map(([i, item]) => v.Data))
-
-        // FIXME if Array
-        let sizes = data.map(item => item.Data)
-        //$.map(data, (item, i) => item.Data)
-        let times = data.map(item => new Date(item.Time).toISOString())
-        //$.map(data, (item, i) => new Date(item.Time).toISOString())
-
-        createChart(sizes, times)
+        refreshData(graph, times, d_sizes, ds_sizes)        
       })
-    
-    const data = getData()
+    }
 
-</script>
+    const transparentize = (color, opacity) =>
+      Color(color).alpha(!opacity ? 0.5 : 1 - opacity).rgbString()
 
+    const colors = {
+      red: "rgb(255, 99, 132)",
+      blue: "rgb(54, 162, 235)"
+    }
+
+    window.addEventListener('load', () => {
+      refresh()
+      setInterval(refresh, 1000)
+    }, true)
+
+  </script>
 </body>
 </html>

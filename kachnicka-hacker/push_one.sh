@@ -1,22 +1,30 @@
 #!/bin/bash
 
+unset {http,https,ftp}_proxy
+
 round() {
 	printf %.2f $1
 }
+
 rand_range() {
 	printf $(($1 + RANDOM%(1+$2-$1)))
 }
+
 epoch() {
 	awk 'BEGIN {srand(); print srand()}'
+}
+
+location() {
+	$(./gps 2> /dev/null || echo "50.0756082884077 14.4183340921249")
 }
 
 target=http://localhost:8080
 device=xxx
 now=$(epoch)
-gps=$(./gps)
+gps=$(location)
 lat=$(round ${gps%% *})
 lng=$(round ${gps#* })
-temperature=$(rand_range 1 200 | xxd -pu)
+temperature=$(rand_range 1 40 | xxd -pu)
 snr=1
 station=2
 
@@ -29,4 +37,4 @@ curl -s $target/push?$queryString \
 	-H 'Accept: text/plain,*/*;q=0.8' \
 	-H 'Cache-Control: max-age=0' \
 	-H 'Connection: keep-alive' \
-	--compressed > /dev/null
+	> /dev/null
