@@ -15,7 +15,7 @@ epoch() {
 }
 
 location() {
-	$(./gps 2> /dev/null || echo "50.0756082884077 14.4183340921249")
+	./gps 2> /dev/null || echo "50.0756082884077 14.4183340921249"
 }
 
 target=http://localhost:8080

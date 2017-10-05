@@ -23,10 +23,6 @@ handlers:
   static_files: static/index.html
   upload: static/index.html
 
-- url: /datasize
-  static_files: static/datasize.html
-  upload: static/datasize.html
-
 - url: /(.*\.(gif|png|jpg|html))$
   static_files: static/\1
   upload: static/.*\.(gif|png|jpg|html)$
