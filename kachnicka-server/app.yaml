@@ -19,10 +19,13 @@ handlers:
   static_files: static/favicon.ico
   upload: static/favicon.ico
 
-
 - url: /
   static_files: static/index.html
   upload: static/index.html
+
+- url: /datasize
+  static_files: static/datasize.html
+  upload: static/datasize.html
 
 - url: /(.*\.(gif|png|jpg|html))$
   static_files: static/\1

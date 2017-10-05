@@ -1,56 +1,101 @@
 <html>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
-<script type="text/javascript" src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
+<head>
+  <title>Kachnicka</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+</head>
 <body>
-<div class="chart-container" style="position: relative; height:40vh; width:80vw">
-    <canvas id="myChart"></canvas>
-</div>
+  <h1>Graph</h1>
+  <div id="chart-container" style="position: relative; height: 70vh; width: 100%" />
 
-<script>
-    var ctx = document.getElementById("myChart").getContext('2d');
+  <script>
+    Chart.defaults.global.animation.duration = 0
 
-    function getData() {
-//        return [10, 11, 10, 15, 12, 13];
-        $.get("/meta", function (r) {
-            console.log("Data -> ", r);
-            var j = JSON.parse(r);
-            var sizes = $.map(j,function(item,i){
-                return ( item.Data);
-            });
-            var times = $.map(j,function(item,i){
-                return ( new Date(item.Time).toISOString());
-            });
-            createChart(sizes, times);
-        });
-    }
-    var data = getData();
-
-    function createChart(data,labels) {
-        var myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Temperature (C)',
-                    data: data,
-                    backgroundColor: [],
-                    borderColor: [],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
-                }
+    const graph = (() => {
+      let canvas = document.createElement("canvas")
+      document.getElementById("chart-container").appendChild(canvas)
+      let ctx = canvas.getContext('2d')
+      let chartOptions = {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: []
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          spanGaps: false,
+          elements: {
+            line: {
+              tension: 0.000001
             }
-        });
+          },
+          plugins: {
+            filler: {
+              propagate: false
+            }
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              ticks: {
+                autoSkip: false
+              }
+            }],
+            yAxes: [{
+              display: true,
+              beginAtZero: true
+            }]
+          }
+        }
+      }
+      return new Chart(ctx, chartOptions)
+    })()
 
+    const refreshData = (chart, times, d_sizes, ds_sizes) => {
+      chart.data.labels = times
+      chart.data.datasets = [{
+        label: 'Temperature (C)',
+        data: d_sizes,
+        backgroundColor: transparentize(colors.red),
+        borderColor: colors.red,
+        fill: false
+      },
+      {
+        label: 'Data size (bytes)',
+        data: ds_sizes,
+        backgroundColor: transparentize(colors.blue),
+        borderColor: colors.blue,
+        fill: false
+      }]
+      chart.update()
     }
-</script>
 
+    const refresh = () => {
+      fetch(`/meta?limit=${50}`)
+      .then(response => response.json())
+      .then(data => {
+        let slice = data.reverse()
+        let d_sizes = slice.map(item => item.Data)
+        let ds_sizes = slice.map(item => item.DataSize)
+        let times = slice.map(item => new Date(item.Time * 1000).toUTCString())
+
+        refreshData(graph, times, d_sizes, ds_sizes)        
+      })
+    }
+
+    const transparentize = (color, opacity) =>
+      Color(color).alpha(!opacity ? 0.5 : 1 - opacity).rgbString()
+
+    const colors = {
+      red: "rgb(255, 99, 132)",
+      blue: "rgb(54, 162, 235)"
+    }
+
+    window.addEventListener('load', () => {
+      refresh()
+      setInterval(refresh, 1000)
+    }, true)
+
+  </script>
 </body>
 </html>

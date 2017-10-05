@@ -24,8 +24,6 @@ func init() {
     local, _ = time.LoadLocation("Europe/Prague")
 }
 
-// [GET] https://kachnicka-170919.appspot.com/push?x={data}&Time={Time}&Snr={Snr}&Station={Station}&Lat={Lat}&Lng={Lng}&Device={Device}
-
 type Metadata struct {
     Time     int32
     Snr      string
@@ -38,10 +36,18 @@ type Metadata struct {
 
 func handlerData(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
-    q := datastore.NewQuery("Metadata").Order("-Time")
+    sLimit := r.URL.Query().Get("limit")
+    var query = datastore.NewQuery("Metadata").Order("-Time")
+
+    if len(sLimit) != 0 {
+        limit, err := strconv.Atoi(sLimit)
+        if err == nil {
+            query = query.Limit(limit)
+        }
+    }
 
     var meta []Metadata
-    keys, err := q.GetAll(ctx, &meta);
+    keys, err := query.GetAll(ctx, &meta);
     if err != nil {
         fmt.Fprintf(w, "Datastore error: %v", err)
     }
@@ -58,10 +64,18 @@ func handlerData(w http.ResponseWriter, r *http.Request) {
 
 func handlerMetaData(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
-    q := datastore.NewQuery("Metadata").Order("-Time")
+    sLimit := r.URL.Query().Get("limit")
+    var query = datastore.NewQuery("Metadata").Order("-Time")
+
+    if len(sLimit) != 0 {
+        limit, err := strconv.Atoi(sLimit)
+        if err == nil {
+            query = query.Limit(limit)
+        }
+    }
 
     var meta []Metadata
-    keys, err := q.GetAll(ctx, &meta);
+    keys, err := query.GetAll(ctx, &meta);
     if err != nil {
         fmt.Fprintf(w, "Datastore error: %v", err)
     }
@@ -71,6 +85,8 @@ func handlerMetaData(w http.ResponseWriter, r *http.Request) {
         datastore.Get(ctx, keys[0], &meta)
         b, _ := json.Marshal(meta)
         fmt.Fprintf(w, "%s", b)
+    } else {
+        fmt.Fprint(w, "[]")
     }
 }
 
@@ -140,7 +156,6 @@ func handlerPush(w http.ResponseWriter, r *http.Request) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-
     temp, err1 := getKeyFromCache("TEMP", r)
     time, err2 := getKeyFromCache("TEMP-TIME", r)
 
@@ -150,16 +165,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    //d := '\u2103'
     fmt.Fprintf(w, "Teplota bazen -> %s čas: %s", temp, time)
 }
 
 func setKeyToCache(ctx context.Context, key string, value string, r *http.Request) {
-
     item := &memcache.Item{
         Key:   key,
         Value: []byte(value),
     }
+
     if err := memcache.Set(ctx, item); err == memcache.ErrNotStored {
         log.Infof(ctx, "item with key %q already exists", item.Key)
     } else if err != nil {
@@ -168,8 +182,8 @@ func setKeyToCache(ctx context.Context, key string, value string, r *http.Reques
 }
 
 func getKeyFromCache(key string, r *http.Request) (string, error) {
-
     ctx := appengine.NewContext(r)
+
     if item, err := memcache.Get(ctx, key); err == memcache.ErrCacheMiss {
         log.Infof(ctx, "item not in the cache")
         return "---", err
