@@ -24,8 +24,6 @@ func init() {
     local, _ = time.LoadLocation("Europe/Prague")
 }
 
-// [GET] https://kachnicka-170919.appspot.com/push?x={data}&Time={Time}&Snr={Snr}&Station={Station}&Lat={Lat}&Lng={Lng}&Device={Device}
-
 type Metadata struct {
     Time     int32
     Snr      string
@@ -71,6 +69,8 @@ func handlerMetaData(w http.ResponseWriter, r *http.Request) {
         datastore.Get(ctx, keys[0], &meta)
         b, _ := json.Marshal(meta)
         fmt.Fprintf(w, "%s", b)
+    } else {
+        fmt.Fprint(w, "[]")
     }
 }
 
@@ -150,16 +150,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    //d := '\u2103'
     fmt.Fprintf(w, "Teplota bazen -> %s čas: %s", temp, time)
 }
 
 func setKeyToCache(ctx context.Context, key string, value string, r *http.Request) {
-
     item := &memcache.Item{
         Key:   key,
         Value: []byte(value),
     }
+
     if err := memcache.Set(ctx, item); err == memcache.ErrNotStored {
         log.Infof(ctx, "item with key %q already exists", item.Key)
     } else if err != nil {
@@ -168,8 +167,8 @@ func setKeyToCache(ctx context.Context, key string, value string, r *http.Reques
 }
 
 func getKeyFromCache(key string, r *http.Request) (string, error) {
-
     ctx := appengine.NewContext(r)
+
     if item, err := memcache.Get(ctx, key); err == memcache.ErrCacheMiss {
         log.Infof(ctx, "item not in the cache")
         return "---", err

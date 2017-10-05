@@ -1,57 +1,52 @@
 <html>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
-<script type="text/javascript" src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
 <body>
 <h1>Data size chart</h1>
 
-<div class="chart-container" style="position: relative; height:40vh; width:80vw">
-    <canvas id="myChart"></canvas>
+<div class="chart-container" style="position: relative; height: 40vh; width: 80vw">
+    <canvas id="myChart" />
 </div>
 
 <script>
-    var ctx = document.getElementById("myChart").getContext('2d');
-
-    function getData() {
-//        return [10, 11, 10, 15, 12, 13];
-        $.get("/meta", function (r) {
-            var j = JSON.parse(r);
-            var sizes = $.map(j,function(item,i){
-                return ( item.DataSize);
-            });
-            var times = $.map(j,function(item,i){
-                return ( new Date(item.Time).toISOString());
-            });
-            console.log(j);
-            createChart(sizes, times);
-        });
+    const createChart = (data, labels) => {
+      let ctx = document.getElementById("myChart").getContext('2d')
+      let chartOptions = {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Data size (bytes)',
+            data,
+            backgroundColor: [],
+            borderColor: [],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+      }
+      let myChart = new Chart(ctx, chartOptions)
     }
-    var data = getData();
 
-    function createChart(data,labels) {
-        var myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Data size (bytes)',
-                    data: data,
-                    backgroundColor: [],
-                    borderColor: [],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
-                }
-            }
-        });
+    const getData = () => fetch('/meta')
+      .then(response => response.json())
+      .then(data => {
+        var sizes = $.map(data, (item, i) => item.DataSize)
+        var times = $.map(data, (item, i) => new Date(item.Time).toISOString())
+        console.log(data)
+        createChart(sizes, times)
+      })
+    
+    const data = getData()
 
-    }
 </script>
 
 </body>
