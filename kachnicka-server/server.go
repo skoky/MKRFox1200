@@ -36,10 +36,18 @@ type Metadata struct {
 
 func handlerData(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
-    q := datastore.NewQuery("Metadata").Order("-Time")
+    sLimit := r.URL.Query().Get("limit")
+    var query = datastore.NewQuery("Metadata").Order("-Time")
+
+    if len(sLimit) != 0 {
+        limit, err := strconv.Atoi(sLimit)
+        if err == nil {
+            query = query.Limit(limit)
+        }
+    }
 
     var meta []Metadata
-    keys, err := q.GetAll(ctx, &meta);
+    keys, err := query.GetAll(ctx, &meta);
     if err != nil {
         fmt.Fprintf(w, "Datastore error: %v", err)
     }
@@ -56,10 +64,18 @@ func handlerData(w http.ResponseWriter, r *http.Request) {
 
 func handlerMetaData(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
-    q := datastore.NewQuery("Metadata").Order("-Time")
+    sLimit := r.URL.Query().Get("limit")
+    var query = datastore.NewQuery("Metadata").Order("-Time")
+
+    if len(sLimit) != 0 {
+        limit, err := strconv.Atoi(sLimit)
+        if err == nil {
+            query = query.Limit(limit)
+        }
+    }
 
     var meta []Metadata
-    keys, err := q.GetAll(ctx, &meta);
+    keys, err := query.GetAll(ctx, &meta);
     if err != nil {
         fmt.Fprintf(w, "Datastore error: %v", err)
     }
@@ -140,7 +156,6 @@ func handlerPush(w http.ResponseWriter, r *http.Request) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-
     temp, err1 := getKeyFromCache("TEMP", r)
     time, err2 := getKeyFromCache("TEMP-TIME", r)
 

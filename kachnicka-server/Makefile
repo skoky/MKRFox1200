@@ -7,4 +7,4 @@ version:
 
 .PHONY: dev
 dev:
-	$(GOSDKBIN)/dev_appserver.py app.yaml
+	$(GOSDKBIN)/dev_appserver.py --clear_datastore yes app.yaml

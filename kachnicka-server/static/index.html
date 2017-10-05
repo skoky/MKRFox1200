@@ -71,10 +71,10 @@
     }
 
     const refresh = () => {
-      fetch('/meta')
+      fetch(`/meta?limit=${50}`)
       .then(response => response.json())
       .then(data => {
-        let slice = data.slice(0, 50).reverse()
+        let slice = data.reverse()
         let d_sizes = slice.map(item => item.Data)
         let ds_sizes = slice.map(item => item.DataSize)
         let times = slice.map(item => new Date(item.Time * 1000).toUTCString())
