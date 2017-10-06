@@ -146,16 +146,16 @@
       .then(response => response.json())
       .then(data => {
         let slice = data.reverse()
-        let d_sizes = slice.map(item => item.Data)
+        let d_sizes = slice.map(item => parseFloat(item.Data).toFixed(2))
         let ds_sizes = slice.map(item => item.DataSize)
         let times = flattenLabels(partitionLabels(slice.map(item => {
           let d = new Date(item.Time * 1000)
           return {
-            year: d.getFullYear(),
-            month: d.getMonth() + 1,
-            day: d.getDate(),
-            hour: `0${d.getHours()}`.slice(-2),
-            minute: `0${d.getMinutes()}`.slice(-2),
+            year: parseInt(d.getFullYear(), 10),
+            month: parseInt(d.getMonth() + 1, 10),
+            day: parseInt(d.getDate(), 10),
+            hour: parseInt(d.getHours(), 10),
+            minute: parseInt(d.getMinutes(), 10),
           }
         })))
 
@@ -171,9 +171,9 @@
     // Helper functions
 
     const getDashboard = data => ({
-      min: data.reduce((p, v) => p < v.Data ? p : v.Data),
-      max: data.reduce((p, v) => p > v.Data ? p : v.Data),
-      now: data[data.length - 1].Data
+      min: parseFloat(data.reduce((p, v) => p < v.Data ? p : v.Data)).toFixed(2),
+      max: parseFloat(data.reduce((p, v) => p > v.Data ? p : v.Data)).toFixed(2),
+      now: parseFloat(data[data.length - 1].Data).toFixed(0)
     })
 
     const objectWithoutKey = (object, key) => {
@@ -203,7 +203,7 @@
               var repeat = Object.keys(labels[year][month][day][hour]).forEach(minute => {
                 var test = []
                 test.length = labels[year][month][day][hour][minute].length
-                test.fill(`${hour}:${minute}`)
+                test.fill(`${`0${hour}`.slice(-2)}:${`0${minute}`.slice(-2)}`)
                 stack_4 = stack_4.concat(test)
               })
               stack_3 = stack_3.concat(stack_4)
