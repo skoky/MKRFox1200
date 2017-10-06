@@ -7,7 +7,7 @@ round() {
 }
 
 rand_range() {
-	printf $(($1 + RANDOM%(1+$2-$1)))
+	printf $(bc -l <<< "scale=8; $1+$RANDOM*$2/32767")
 }
 
 epoch() {
@@ -18,9 +18,20 @@ location() {
 	./gps 2> /dev/null || echo "50.0756082884077 14.4183340921249"
 }
 
+for i in "$@"; do
+case $i in
+    -ts=*|--timestamp=*)
+    now="${i#*=}"
+    shift
+    ;;
+    *)
+    ;;
+esac
+done
+
 target=http://localhost:8080
 device=xxx
-now=$(epoch)
+[ -z $now ] && now=$(epoch)
 gps=$(location)
 lat=$(round ${gps%% *})
 lng=$(round ${gps#* })
