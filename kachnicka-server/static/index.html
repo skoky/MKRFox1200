@@ -2,6 +2,7 @@
 <head>
   <title>Kachnicka</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css" integrity="sha384-h21C2fcDk/eFsW9sC9h0dhokq5pDinLNklTKoxIZRUn3+hvmgQSffLLQ4G4l2eEr" crossorigin="anonymous"><style>
   <style>
     canvas {
       -moz-user-select: none;
@@ -9,6 +10,8 @@
       -ms-user-select: none;
     }
     #chart-container {
+      box-sizing: border-box;
+      padding: 10px;
       height: 70%;
       min-height: 250px;
       max-height: 400px;
@@ -17,9 +20,10 @@
   </style>
 </head>
 <body>
-  <h1>Graph</h1>
-
-  <div id="chart-container" />
+  <div class="container-fluid">
+    <h1>Graph</h1>
+    <div id="chart-container" />
+  </div>
 
   <script>
     // Compile-time constants
@@ -64,12 +68,17 @@
             xAxes: [{
               display: true,
               ticks: {
-                autoSkip: false
+                minRotation: 45,
+                autoSkip: false,
+                fontSize: 11,
               }
             }],
             yAxes: [{
               display: true,
-              beginAtZero: true
+              beginAtZero: true,
+              ticks: {
+                fontSize: 10,
+              }
             }]
           }
         }
@@ -82,23 +91,31 @@
     const refreshData = (chart, times, d_sizes, ds_sizes) => {
       chart.data.labels = times
       chart.data.datasets = [
-      {
-        label: 'Data size (bytes)',
-        data: ds_sizes,
-        borderDash: [5, 5],
-        borderColor: transparentize(colors.blue, .5),
-        backgroundColor: transparentize(colors.blue, .9),
-        fill: true,
-        tension: 0,
-        radius: 0
-      },{
-        label: 'Temperature (C)',
-        tension: .7,
-        data: d_sizes,
-        backgroundColor: colors.red,
-        borderColor: colors.red,
-        fill: false
-      }]
+        {
+          label: 'Temperature (C)',
+          tension: .5,
+          stepped: true,
+          borderWidth: 3,
+          radius: 3,
+          data: d_sizes,
+          backgroundColor: colors.red,
+          borderColor: colors.red,
+          fill: false
+        },
+        {
+          label: 'Data size (bytes)',
+          data: ds_sizes,
+          borderDash: [10, 10],
+          hoverRadius: 10,
+          borderWidth: 1,
+          pointStyle: 'dash',
+          borderColor: transparentize(colors.black, .9),
+          backgroundColor: transparentize(colors.black, .9),
+          fill: true,
+          tension: 0,
+          radius: 0
+        }
+      ]
       chart.update()
     }
 
@@ -117,8 +134,7 @@
         let slice = data.reverse()
         let d_sizes = slice.map(item => item.Data)
         let ds_sizes = slice.map(item => item.DataSize)
-        let times = slice.map(item => new Date(item.Time * 1000).toLocaleDateString())
-        window.temp = partitionLabels(slice.map(item => {
+        let times = flattenLabels(partitionLabels(slice.map(item => {
           let d = new Date(item.Time * 1000)
           return {
             year: d.getFullYear(),
@@ -127,7 +143,7 @@
             hour: d.getHours(),
             minute: d.getMinutes(),
           }
-        }))
+        })))
 
         refreshData(graph, times, d_sizes, ds_sizes)        
       })
@@ -150,8 +166,38 @@
       return rv
     }, {})
 
-    //http://www.chartjs.org/samples/latest/scales/multiline-labels.html
-    //labels: [["June","2015"], "July", "August", "September", "October", "November", "December", ["January","2016"],"February", "March", "April", "May"],
+    const flattenLabels = labels => {
+      var stack_0 = []
+      // YEARS
+      Object.keys(labels).forEach(x => {
+        // YEARS
+        var stack_1 = []
+        Object.keys(labels[x]).forEach(y => {
+          // MONTHS
+          var stack_2 = []
+          Object.keys(labels[x][y]).forEach(z => {
+            // DAYS
+            var stack_3 = []
+            Object.keys(labels[x][y][z]).forEach(w => {
+              // HOURS
+              var stack_4 = []
+              var repeat = Object.keys(labels[x][y][z][w]).forEach(m => {
+                var test = []
+                test.length = labels[x][y][z][w][m].length
+                test.fill(w+":"+m)
+                stack_4 = stack_4.concat(test)
+              })
+              stack_3 = stack_3.concat(stack_4)
+            })
+            stack_3[0] = new Date(x, parseInt(y) - 1, z).toLocaleDateString()+" "+stack_3[0]
+            stack_2 = stack_2.concat(stack_3)
+          })
+          stack_1 = stack_1.concat(stack_2)
+        })
+        stack_0 = stack_0.concat(stack_1)
+      })
+      return stack_0
+    }
 
     const partitionLabels = labels => {
       let byYear = groupBy(labels, "year")
@@ -186,6 +232,7 @@
       return byYear
     }
 
+
     const transparentize = (color, opacity = 0.5) =>
       Color(color).alpha(1 - opacity).rgbString()
 
@@ -200,7 +247,7 @@
       document.getElementsByTagName("h1")[0].innerHTML = `Temperature of last ${displayLimit} measurements`
 
       refresh()
-      setInterval(refresh, 100)
+      setInterval(refresh, 60*1000)
     }, true)
 
   </script>
