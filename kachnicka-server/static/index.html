@@ -36,11 +36,11 @@
   <script defer>
     // Compile-time constants
     Chart.defaults.global.animation.duration = 0
-    const displayLimit = 80
+    const displayLimit = 60
 
     // Run-time constants
-    var lastUpdate = undefined
-    var lazyGraph = undefined
+    var lastUpdate = void 0
+    var lazyGraph = void 0
 
     const graph = () => {
       if (lazyGraph) {
@@ -79,7 +79,7 @@
               display: true,
               ticks: {
                 minRotation: 45,
-                autoSkip: true,
+                autoSkip: false,
                 fontSize: 11,
               }
             }],
@@ -98,7 +98,6 @@
     }
 
     // Workflow functions
-
     const refreshData = (chart, times, d_sizes, ds_sizes, extremes) => {
       document.getElementById("extreme-max").innerHTML = `high: ${extremes.max} °C`
       document.getElementById("extreme-min").innerHTML = `low: ${extremes.min} °C`
@@ -189,28 +188,27 @@
 
     const flattenLabels = labels => {
       var stack_0 = []
-      // YEARS
-      Object.keys(labels).forEach(x => {
+      Object.keys(labels).forEach(year => {
         // YEARS
         var stack_1 = []
-        Object.keys(labels[x]).forEach(y => {
+        Object.keys(labels[year]).forEach(month => {
           // MONTHS
           var stack_2 = []
-          Object.keys(labels[x][y]).forEach(z => {
+          Object.keys(labels[year][month]).forEach(day => {
             // DAYS
             var stack_3 = []
-            Object.keys(labels[x][y][z]).forEach(w => {
+            Object.keys(labels[year][month][day]).forEach(hour => {
               // HOURS
               var stack_4 = []
-              var repeat = Object.keys(labels[x][y][z][w]).forEach(m => {
+              var repeat = Object.keys(labels[year][month][day][hour]).forEach(minute => {
                 var test = []
-                test.length = labels[x][y][z][w][m].length
-                test.fill(`${w}:${m}`)
+                test.length = labels[year][month][day][hour][minute].length
+                test.fill(`${hour}:${minute}`)
                 stack_4 = stack_4.concat(test)
               })
               stack_3 = stack_3.concat(stack_4)
             })
-            stack_3[0] = `${new Date(x, parseInt(y) - 1, z).toLocaleDateString()} ${stack_3[0]}`
+            stack_3[0] = `${new Date(year, parseInt(month) - 1, day).toLocaleDateString()} ${stack_3[0]}`
             stack_2 = stack_2.concat(stack_3)
           })
           stack_1 = stack_1.concat(stack_2)
@@ -224,30 +222,30 @@
       let byYear = groupBy(labels, "year")
       let years = Object.keys(byYear)
 
-      years.forEach(k => {
-        let byMonths = groupBy(byYear[k], "month")
+      years.forEach(year => {
+        let byMonths = groupBy(byYear[year], "month")
         let months = Object.keys(byMonths)
 
-        months.forEach(k => {
-          let byDays = groupBy(byMonths[k], "day")
+        months.forEach(month => {
+          let byDays = groupBy(byMonths[month], "day")
           let days = Object.keys(byDays)
 
-          days.forEach(k => {
-            let byHours = groupBy(byDays[k], "hour")
+          days.forEach(day => {
+            let byHours = groupBy(byDays[day], "hour")
             let hours = Object.keys(byHours)
 
-            hours.forEach(k => {
-              let byMinutes = groupBy(byHours[k], "minute")
-              byHours[k] = byMinutes
+            hours.forEach(hour => {
+              let byMinutes = groupBy(byHours[hour], "minute")
+              byHours[hour] = byMinutes
             })
 
-            byDays[k] = byHours
+            byDays[day] = byHours
           })
 
-          byMonths[k] = byDays
+          byMonths[month] = byDays
         })
 
-         byYear[k] = byMonths
+         byYear[year] = byMonths
       })
 
       return byYear
