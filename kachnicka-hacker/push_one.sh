@@ -35,7 +35,7 @@ device=xxx
 gps=$(location)
 lat=$(round ${gps%% *})
 lng=$(round ${gps#* })
-temperature=$(rand_range 1 40 | xxd -pu)
+temperature=$(rand_range 5 40 | xxd -pu)
 snr=1
 station=2
 

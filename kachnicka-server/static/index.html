@@ -1,39 +1,59 @@
 <html>
 <head>
   <title>Duck Temperature Sensor</title>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
+  <link href='http://fonts.googleapis.com/css?family=Fira+Sans:100,200,300,400,500,600,700' rel='stylesheet'  type='text/css'>
 
   <style>
-    canvas {
-      -moz-user-select: none;
-      -webkit-user-select: none;
-      -ms-user-select: none;
-    }
-    .jumbotron {
-      background-color: transparent;
-    }
-    #chart-container {
-      box-sizing: border-box;
-      padding: 10px;
-      height: 70%;
-      min-height: 250px;
-      max-height: 400px;
-      width: 100%
-    }
-    .badge-hi {
-      color: #F56919;
-      background-color: transparent;
-    }
-    .badge-lo {
-      color: #031727;
-      background-color: transparent;
-    }
-  </style>
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    font-weight: 100;
+    color: #453A2E;
+  }
+  h1, span, b {
+    text-rendering: optimizeLegibility;
+  }
+  h1.display-3 {
+    font-weight: 100 !important;
+  }
+  h1.display-3 b {
+    font-weight: 200 !important;
+    letter-spacing: -0.02em;
+  }
+  .lead .badge {
+    font-size: 1rem;
+    font-weight: 300 !important;
+  }
+  canvas {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+  }
+  .jumbotron {
+    background-color: transparent;
+  }
+  #chart-container {
+    box-sizing: border-box;
+    padding: 10px;
+    height: 70%;
+    min-height: 250px;
+    max-height: 400px;
+    width: 100%
+  }
+  .badge-hi {
+    color: #F56919;
+    background-color: transparent;
+  }
+  .badge-lo {
+    color: #031727;
+    background-color: transparent;
+  }
+</style>
 
-  <script defer>
+<script defer>
     // Compile-time constants
     Chart.defaults.global.animation.duration = 0
     const displayLimit = 60
@@ -85,8 +105,8 @@
             }],
             yAxes: [{
               display: true,
-              beginAtZero: true,
               ticks: {
+                beginAtZero: true,
                 fontSize: 10,
               }
             }]
@@ -101,34 +121,31 @@
     const refreshData = (chart, times, d_sizes, ds_sizes, extremes) => {
       document.getElementById("extreme-max").innerHTML = `high: ${extremes.max} °C`
       document.getElementById("extreme-min").innerHTML = `low: ${extremes.min} °C`
-      document.getElementsByTagName("h1")[0].innerHTML = `Currently ${extremes.now} °C`
+      document.getElementsByTagName("h1")[0].innerHTML = `Currently <b>${extremes.now}°C</b>/<b>${celsiusToFahrenheit(extremes.now)}°F</b>`
 
       chart.data.labels = times
       chart.data.datasets = [
-        {
-          label: 'temperature',
-          tension: .4,
-          stepped: true,
-          borderWidth: 2,
-          radius: 2,
-          data: d_sizes,
-          backgroundColor: colors.primary,
-          borderColor: colors.primary,
-          fill: false
-        },
-        {
-          label: 'data size',
-          data: ds_sizes,
-          borderDash: [10, 10],
-          hoverRadius: 10,
-          borderWidth: 1,
-          pointStyle: 'dash',
-          borderColor: transparentize(colors.secondary, .95),
-          backgroundColor: transparentize(colors.secondary, .85),
-          fill: true,
-          tension: .8,
-          radius: 0
-        }
+      {
+        label: 'temperature',
+        tension: .4,
+        stepped: true,
+        borderWidth: 2,
+        radius: 2,
+        data: d_sizes,
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
+        fill: false
+      },
+      {
+        label: 'data size',
+        data: ds_sizes,
+        hoverRadius: 10,
+        borderColor: 'transparent',
+        backgroundColor: transparentize(colors.secondary, .93),
+        fill: true,
+        tension: .5,
+        radius: 0
+      }
       ]
       chart.update()
     }
@@ -151,11 +168,11 @@
         let times = flattenLabels(partitionLabels(slice.map(item => {
           let d = new Date(item.Time * 1000)
           return {
-            year: parseInt(d.getFullYear(), 10),
-            month: parseInt(d.getMonth() + 1, 10),
-            day: parseInt(d.getDate(), 10),
-            hour: parseInt(d.getHours(), 10),
-            minute: parseInt(d.getMinutes(), 10),
+            year: floor(d.getFullYear()),
+            month: floor(d.getMonth() + 1),
+            day: floor(d.getDate()),
+            hour: floor(d.getHours()),
+            minute: floor(d.getMinutes()),
           }
         })))
 
@@ -169,6 +186,10 @@
     }
 
     // Helper functions
+
+    const floor = i => parseInt(i, 10)
+
+    const celsiusToFahrenheit = deg => floor((deg * (9/5)) + 32)
 
     const getDashboard = data => ({
       min: parseFloat(data.reduce((p, v) => p < v.Data ? p : v.Data)).toFixed(2),
@@ -208,7 +229,7 @@
               })
               stack_3 = stack_3.concat(stack_4)
             })
-            stack_3[0] = `${new Date(year, parseInt(month) - 1, day).toLocaleDateString()} ${stack_3[0]}`
+            stack_3[0] = `${new Date(year, floor(month) - 1, day).toLocaleDateString()} ${stack_3[0]}`
             stack_2 = stack_2.concat(stack_3)
           })
           stack_1 = stack_1.concat(stack_2)
@@ -245,17 +266,17 @@
           byMonths[month] = byDays
         })
 
-         byYear[year] = byMonths
+        byYear[year] = byMonths
       })
 
       return byYear
     }
 
     const transparentize = (color, opacity = 0.5) =>
-      Color(color).alpha(1 - opacity).rgbString()
+    Color(color).alpha(1 - opacity).rgbString()
 
     const colors = {
-      secondary: "#031727",
+      secondary: "#453A2E",
       primary: "#F56919",
     }
 
