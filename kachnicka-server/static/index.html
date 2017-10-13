@@ -5,7 +5,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
-  <link href='http://fonts.googleapis.com/css?family=Fira+Sans:100,200,300,400,500,600,700' rel='stylesheet'  type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Fira+Sans:100,200,300,400,500,600,700' rel='stylesheet'  type='text/css'>
 
   <style>
   body {
@@ -121,7 +121,7 @@
     const refreshData = (chart, times, d_sizes, ds_sizes, extremes) => {
       document.getElementById("extreme-max").innerHTML = `high: ${extremes.max} °C`
       document.getElementById("extreme-min").innerHTML = `low: ${extremes.min} °C`
-      document.getElementsByTagName("h1")[0].innerHTML = `Currently <b>${extremes.now}°C</b>/<b>${celsiusToFahrenheit(extremes.now)}°F</b>`
+      document.getElementsByTagName("h1")[0].innerHTML = `Currently <b>${extremes.now}°C</b> / <b>${celsiusToFahrenheit(extremes.now)}°F</b>`
 
       chart.data.labels = times
       chart.data.datasets = [
